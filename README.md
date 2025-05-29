@@ -1,16 +1,8 @@
-# web_app
+# Oh my tag !
 
-A new Flutter project.
+Oh my tag is a school project for MyDigitalSchool.
 
-## Getting Started
+## What is the goal of "Oh my tag !" ?
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This project is the web app of Oh my tag !
+You can find the backend at this link : [Link to the backend repository](https://github.com/BastienU/MyDigitalProject.git)
