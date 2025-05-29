@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_navbar.dart';
+import '../widgets/footer.dart';
 
 class HomePage extends StatelessWidget 
 {
   const HomePage({super.key});
 
   @override
-Widget build(BuildContext context) 
-{
-  return Scaffold
-  (
+Widget build(BuildContext context) {
+  return Scaffold(
     appBar: const CustomNavbar(),
     drawer: MediaQuery.of(context).size.width < 800 
-    ? Drawer
-    (
-      child: CustomNavbar().buildMobileDrawer(context),
-    )
-    : null,
-    body: SafeArea
-    (
-      child: LayoutBuilder
-      (
-        builder: (context, constraints) 
-        {
-          final isMobile = constraints.maxWidth < 800;
-          return isMobile ? _buildMobileLayout() : _buildDesktopLayout();
-        },
+        ? Drawer(
+            child: CustomNavbar().buildMobileDrawer(context),
+          )
+        : null,
+    body: SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 800;
+                return isMobile ? _buildMobileLayout() : _buildDesktopLayout();
+              },
+            ),
+
+            const Footer(),
+          ],
+        ),
       ),
     ),
   );
 }
+
 
   Widget _customButton
   (
@@ -75,8 +79,6 @@ Widget build(BuildContext context)
         _buildInspirationSection(),
 
         _buildTestimonialsSection(),
-        
-        _buildFooter(),
       ],
     ),
   );
@@ -564,243 +566,6 @@ Widget build(BuildContext context)
     );
   }
 
-  Widget _buildFooter() 
-  {
-    return Container
-    (
-      color: const Color.fromARGB(255, 89, 45, 242),
-      padding: const EdgeInsets.symmetric(horizontal: 200, vertical: 50),
-      child: Row
-      (
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: 
-        [
-          Expanded
-          (
-            flex: 2,
-            child: Container
-            (
-              padding: const EdgeInsets.all(100),
-              decoration: BoxDecoration
-              (
-                image: const DecorationImage
-                (
-                  image: AssetImage('images/logo_ohMyTag_white.png'),
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 40),
-
-          Expanded
-          (
-            flex: 2,
-            child: Column
-            (
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: 
-              [
-                const Text
-                (
-                  'A PROPOS DE OH MY TAG !',
-                  style: TextStyle
-                  (
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'CaviarDreams',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container
-                (
-                  width: 250,
-                  height: 2,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 15),
-                _buildLinkList
-                (
-                  [
-                    'À propos de nous', 'F.A.Q', 'Nous contacter', 'Gestion de mon abonnement',
-                  ],
-                  [
-                    'about.dart', 'faq.dart', 'contactUs.dart', 'manageSubscription.dart',
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 40),
-
-          Expanded
-          (
-            flex: 2,
-            child: Column
-            (
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: 
-              [
-                const Text
-                (
-                  'LE SERVICE OH MY TAG !',
-                  style: TextStyle
-                  (
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'CaviarDreams',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container
-                (
-                  width: 240,
-                  height: 2,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 15),
-                _buildLinkList
-                (
-                  [
-                    'Comment ça marche ?', 'Créer une nouvelle wishlist', 'Rechercher une wishlist',
-                  ],
-                  [
-                    'privacy.dart', 'terms.dart', 'support.dart',
-                  ]
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 40),
-
-          Expanded
-          (
-            flex: 2,
-            child: Column
-            (
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: 
-              [
-                const Text
-                (
-                  'SUIVEZ-NOUS SUR\nNOS RESEAUX SOCIAUX !',
-                  style: TextStyle
-                  (
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'CaviarDreams',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container
-                (
-                  width: 240,
-                  height: 2,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 15),
-                Row
-                (
-                  children: 
-                  [
-                    _buildSocialIcon('images/logo_insta_white.png', 'https://instagram.com'),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row
-                (
-                  children: 
-                  [
-                    _buildStoreButton('images/download_AppStore.png', 'https://www.apple.com/app-store/'),
-                    const SizedBox(width: 10),
-                    _buildStoreButton('images/download_GooglePlay.png', 'https://play.google.com/store/apps'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Function to build a list of links
-  Widget _buildLinkList(List<String> titles, List<String> paths) 
-  {
-    return Column
-    (
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate
-      (
-        titles.length,
-        (index) => Padding
-        (
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GestureDetector
-          (
-            onTap: () 
-            {
-              // Ajoute ici la navigation vers les pages
-            },
-            child: Text
-            (
-              '• ${titles[index]}',
-              style: const TextStyle
-              (
-                fontSize: 18,
-                color: Colors.white,
-                fontFamily: 'CaviarDreams',
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Function to display a social icon that can be clicked
-  Widget _buildSocialIcon(String assetPath, String url) 
-  {
-    return GestureDetector
-    (
-      onTap: () 
-      {
-
-      },
-      child: Image.asset
-      (
-        assetPath,
-        width: 40,
-        height: 40,
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-
-  Widget _buildStoreButton(String assetPath, String url) 
-  {
-    return GestureDetector
-    (
-      onTap: () 
-      {
-        
-      },
-      child: Image.asset
-      (
-        assetPath,
-        width: 150,
-        height: 50,
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-
   Widget _buildMobileLayout() 
   {
     return SingleChildScrollView
@@ -817,7 +582,6 @@ Widget build(BuildContext context)
           _buildMobileInspirationSection(),
           const SizedBox(height: 30),
           _buildMobileTestimonialsSection(),
-          _buildMobileFooter(),
         ],
       ),
     );
@@ -1181,152 +945,6 @@ Widget build(BuildContext context)
                 );
               },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileFooter() 
-  {
-    return Container
-    (
-      color: const Color.fromARGB(255, 89, 45, 242),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-      child: Column
-      (
-        children: 
-        [
-          Container
-          (
-            height: 150,
-            decoration: const BoxDecoration
-            (
-              image: DecorationImage
-              (
-                image: AssetImage('images/logo_ohMyTag_footer.png'),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          Column
-          (
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: 
-            [
-              const Text
-              (
-                'A PROPOS DE OH MY TAG !',
-                style: TextStyle
-                (
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'CaviarDreams',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(width: 250, height: 2, color: Colors.white),
-              const SizedBox(height: 15),
-              _buildLinkList
-              (
-                [
-                  'À propos de nous',
-                  'F.A.Q',
-                  'Nous contacter',
-                  'Gestion de mon abonnement',
-                ],
-                [
-                  'about.dart',
-                  'faq.dart',
-                  'contactUs.dart',
-                  'manageSubscription.dart',
-                ]
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 30),
-
-          Column
-          (
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: 
-            [
-              const Text
-              (
-                'LE SERVICE OH MY TAG !',
-                style: TextStyle
-                (
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'CaviarDreams',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(width: 240, height: 2, color: Colors.white),
-              const SizedBox(height: 15),
-              _buildLinkList
-              (
-                [
-                  'Comment ça marche ?',
-                  'Créer une wishlist',
-                  'Rechercher une wishlist',
-                ],
-                [
-                  'privacy.dart',
-                  'terms.dart',
-                  'support.dart',
-                ]
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 30),
-
-          Column
-          (
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: 
-            [
-              const Text
-              (
-                'SUIVEZ-NOUS SUR\nNOS RESEAUX SOCIAUX !',
-                style: TextStyle
-                (
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'CaviarDreams',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(width: 240, height: 2, color: Colors.white),
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 100),
-                    child: _buildSocialIcon('images/logo_insta_white.png', 'https://instagram.com'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row
-              (
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: 
-                [
-                  _buildStoreButton('images/download_AppStore.png', 'https://www.apple.com/app-store/'),
-                  const SizedBox(width: 10),
-                  _buildStoreButton('images/download_GooglePlay.png', 'https://play.google.com/store/apps'),
-                ]
-              ),
-            ],
           ),
         ],
       ),
