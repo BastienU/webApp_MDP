@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/footer.dart';
 import '../views/register.dart';
 import '../config.dart';
@@ -19,15 +19,27 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    bool isLoggedIn = await _isAuthenticated();
+    if (isLoggedIn) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
+  }
 
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    return await storage.read(key: 'token');
   }
 
   Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
+    await storage.write(key: 'token', value: token);
   }
 
   String? _validateEmail(String email) {
@@ -43,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
     if (password.length < 8) return "Le mot de passe doit contenir au moins 8 caractères.";
     return null;
   }
-
   Future<bool> _isAuthenticated() async {
     final token = await _getToken();
     return token != null;
@@ -72,6 +83,7 @@ class _LoginPageState extends State<LoginPage> {
       final token = json['token'];
 
       await _saveToken(token);
+      setState(() {});
 
       final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(token.split('.')[1]))));
       final String role = payload['role'];
@@ -86,9 +98,7 @@ class _LoginPageState extends State<LoginPage> {
     } else {
       final error = jsonDecode(response.body)['error'];
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-          error.contains("incorrect") ? "Email ou mot de passe incorrect." : error,
-        )),
+        SnackBar(content: Text(error.contains("incorrect") ? "Email ou mot de passe incorrect." : error)),
       );
     }
   }
@@ -145,42 +155,58 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 20),
           _buildTextField(label: 'Mot de passe', controller: passwordController, obscure: true),
           const SizedBox(height: 25),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF592DF2),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () {
-                FocusScope.of(context).unfocus();
-                _loginUser();
-              },
-              child: const Text(
-                'Se connecter à mon espace',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
+          FutureBuilder<bool>(
+            future: _isAuthenticated(),
+            builder: (context, snapshot) {
+              final isLoggedIn = snapshot.data ?? false;
+              return isLoggedIn
+                  ? Container() // ✅ Masque le bouton si connecté
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF592DF2),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          _loginUser();
+                        },
+                        child: const Text(
+                          'Se connecter à mon espace',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    );
+            },
           ),
           const SizedBox(height: 15),
           Center(
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
+            child: FutureBuilder<bool>(
+              future: _isAuthenticated(),
+              builder: (context, snapshot) {
+                final isLoggedIn = snapshot.data ?? false;
+                return isLoggedIn
+                    ? Container()
+                    : TextButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
+                        },
+                        child: RichText(
+                          text: const TextSpan(
+                            text: 'Vous n\'avez pas encore de compte ? ',
+                            style: TextStyle(color: Colors.grey, fontSize: 13),
+                            children: [
+                              TextSpan(
+                                text: 'Inscrivez-vous !',
+                                style: TextStyle(color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
               },
-              child: RichText(
-                text: const TextSpan(
-                  text: 'Vous n\'avez pas encore de compte ? ',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                  children: [
-                    TextSpan(
-                      text: 'Inscrivez-vous !',
-                      style: TextStyle(color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
         ],

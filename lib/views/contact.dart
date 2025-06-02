@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../layout/main_scaffold.dart'; // ✅ Importer `MainScaffold`
+import '../layout/main_scaffold.dart';
 import '../widgets/footer.dart';
 
 class ContactPage extends StatelessWidget {

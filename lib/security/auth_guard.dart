@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../views/login.dart';
 
 class AuthGuard extends StatelessWidget {
   final Widget protectedPage;
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   const AuthGuard({super.key, required this.protectedPage});
 
   Future<bool> _isAuthenticated() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token') != null;
+    final token = await storage.read(key: 'token');
+    return token != null;
   }
 
   @override

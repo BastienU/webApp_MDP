@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'layout/main_scaffold.dart';
 import 'views/home_page.dart';
 import 'views/login.dart';
 import 'views/register.dart';
@@ -32,9 +30,9 @@ class MyApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/scanner': (context) => AuthGuard(protectedPage: const BarcodeScannerPage()), // 🔥 Route sécurisée
-        '/contact': (context) => AuthGuard(protectedPage: const ContactPage()), // 🔥 Route sécurisée
-        '/wishlist': (context) => AuthGuard(protectedPage: const WishlistPage()), // 🔥 Route sécurisée
+        '/scanner': (context) => AuthGuard(protectedPage: const BarcodeScannerPage()),
+        '/contact': (context) => const ContactPage(),
+        '/wishlist': (context) => AuthGuard(protectedPage: const WishlistPage()),
       },
     );
   }

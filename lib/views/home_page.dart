@@ -942,15 +942,4 @@ class HomePage extends StatelessWidget {
     );
   }
 
-
-  Widget _drawerItem(BuildContext context, String title, String route) {
-  return ListTile(
-    title: Text(title),
-    onTap: () {
-      Navigator.pop(context);
-      Navigator.pushReplacementNamed(context, route);
-    },
-  );
-}
-
 }

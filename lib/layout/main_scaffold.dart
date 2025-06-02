@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../views/home_page.dart';
-import '../views/login.dart';
-import '../views/register.dart';
-import '../views/contact.dart';
-import '../views/barcode_scanner_page.dart';
-import '../views/wishlist.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget body;
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   const MainScaffold({super.key, required this.body});
 
   Future<bool> _isAuthenticated() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token') != null;
+    final token = await storage.read(key: 'token');
+    return token != null;
   }
 
   Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token'); // ✅ Supprime le token
-    Navigator.pushReplacementNamed(context, '/login'); // 🚀 Redirige vers la page de connexion
+    await storage.delete(key: 'token');
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -41,8 +35,8 @@ class MainScaffold extends StatelessWidget {
                   return Row(
                     children: [
                       _navItem(context, 'Accueil', '/'),
-                      _navItem(context, 'Scanner', '/scanner'),
-                      _navItem(context, 'Wishlist', '/wishlist'),
+                      if (isLoggedIn) _navItem(context, 'Scanner', '/scanner'),
+                      if (isLoggedIn) _navItem(context, 'Wishlist', '/wishlist'),
                       _navItem(context, 'Contact', '/contact'),
                       isLoggedIn
                           ? TextButton(
@@ -86,8 +80,8 @@ class MainScaffold extends StatelessWidget {
                     children: [
                       Image.asset('images/logo_ohmytag.png', width: 200),
                       _drawerItem(context, 'Accueil', '/'),
-                      _drawerItem(context, 'Scanner', '/scanner'),
-                      _drawerItem(context, 'Wishlist', '/wishlist'),
+                      if (isLoggedIn) _drawerItem(context, 'Scanner', '/scanner'),
+                      if (isLoggedIn) _drawerItem(context, 'Wishlist', '/wishlist'),
                       _drawerItem(context, 'Contact', '/contact'),
                       isLoggedIn
                           ? ListTile(
