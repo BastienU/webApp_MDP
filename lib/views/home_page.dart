@@ -1,39 +1,30 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_navbar.dart';
+import '../layout/main_scaffold.dart';
 import '../widgets/footer.dart';
 
-class HomePage extends StatelessWidget 
-{
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: const CustomNavbar(),
-    drawer: MediaQuery.of(context).size.width < 800 
-        ? Drawer(
-            child: CustomNavbar().buildMobileDrawer(context),
-          )
-        : null,
-    body: SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 800;
-                return isMobile ? _buildMobileLayout() : _buildDesktopLayout();
-              },
-            ),
-
-            const Footer(),
-          ],
+  Widget build(BuildContext context) {
+    return MainScaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 800;
+                  return isMobile ? _buildMobileLayout() : _buildDesktopLayout();
+                },
+              ),
+              const Footer(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _customButton
   (
@@ -950,4 +941,16 @@ Widget build(BuildContext context) {
       ),
     );
   }
+
+
+  Widget _drawerItem(BuildContext context, String title, String route) {
+  return ListTile(
+    title: Text(title),
+    onTap: () {
+      Navigator.pop(context);
+      Navigator.pushReplacementNamed(context, route);
+    },
+  );
+}
+
 }

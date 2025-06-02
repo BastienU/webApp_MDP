@@ -1,0 +1,12 @@
+{
+  "build": {
+    "builder": "static"
+  },
+  "static": {
+    "public": "build/web",
+    "ignore": [
+      "**/.*",
+      "**/*.md"
+    ]
+  }
+}
