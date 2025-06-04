@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:web_app/config.dart';
+import 'product_detail_page.dart';
+import 'manual_code_entry_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:web_app/config.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
   const BarcodeScannerPage({super.key});
@@ -12,44 +14,62 @@ class BarcodeScannerPage extends StatefulWidget {
 }
 
 class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
+  late final MobileScannerController _controller;
   bool _isFetching = false;
-  String? _error;
-  Map<String, dynamic>? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MobileScannerController(
+      facing: CameraFacing.back,
+      torchEnabled: false, // ✅ Initialisation du flash désactivé
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void _onDetect(BarcodeCapture capture) async {
-    if (_isFetching) return;
-
-    final Barcode? barcode = capture.barcodes.first;
-    final String? code = barcode?.rawValue;
-
+    if (_isFetching || capture.barcodes.isEmpty) return;
+    final code = capture.barcodes.first.rawValue;
     if (code == null) return;
 
-    setState(() {
-      _isFetching = true;
-      _error = null;
-    });
-
+    setState(() => _isFetching = true);
     try {
-      final response = await http.get(Uri.parse('$apiBaseUrl/products/$code'));
-
+      final response = await http.get(Uri.parse('$apiBaseUrl/api/products/$code'));
       if (response.statusCode == 200) {
-        setState(() {
-          _product = jsonDecode(response.body);
-        });
+        final product = jsonDecode(response.body);
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailPage(product: product),
+          ),
+        );
       } else {
-        setState(() {
-          _error = 'Produit non trouvé';
-        });
+        _showError('Produit non trouvé');
       }
     } catch (e) {
-      setState(() {
-        _error = 'Erreur serveur : $e';
-      });
+      _showError('Erreur serveur : $e');
     } finally {
-      setState(() {
-        _isFetching = false;
-      });
+      setState(() => _isFetching = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _navigateToManualEntry() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ManualCodeEntryPage()),
+    );
   }
 
   @override
@@ -60,37 +80,48 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
         children: [
           Expanded(
             flex: 3,
-            child: MobileScanner(
-              onDetect: _onDetect,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                MobileScanner(
+                  controller: _controller,
+                  onDetect: _onDetect,
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.flash_on, color: Colors.white),
+                        onPressed: () {
+                          _controller.toggleTorch();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+                        onPressed: () {
+                          _controller.switchCamera();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           if (_isFetching)
             const Padding(
               padding: EdgeInsets.all(20),
               child: CircularProgressIndicator(),
-            )
-          else if (_error != null)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
-            )
-          else if (_product != null)
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: ListView(
-                  children: [
-                    Text("Nom : ${_product!['name'] ?? 'N/A'}", style: const TextStyle(fontSize: 18)),
-                    Text("Prix : ${_product!['price'] ?? 'N/A'} €"),
-                    Text("Composition : ${_product!['composition'] ?? 'N/A'}"),
-                    Text("Description :\n${_product!['description'] ?? 'N/A'}"),
-                    Text("Image :\n${_product!['image'] ?? 'N/A'}"),
-                    Text("Code :\n${_product!['code'] ?? 'N/A'}"),
-                  ],
-                ),
-              ),
             ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ElevatedButton(
+              onPressed: _navigateToManualEntry,
+              child: const Text("Renseigner le code manuellement"),
+            ),
+          ),
         ],
       ),
     );

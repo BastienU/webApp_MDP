@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:web_app/views/about.dart';
+import 'package:web_app/views/contact.dart';
+import 'package:web_app/views/faq.dart';
+import 'package:web_app/views/generals_gonditions.dart';
 
 class Footer extends StatelessWidget 
 {
@@ -11,7 +15,7 @@ class Footer extends StatelessWidget
     return isMobile ? _buildMobileFooter(context) : _buildDesktopFooter(context);
   }
 
-  // 🔹 Footer Desktop
+  // Footer Desktop
   Widget _buildDesktopFooter(BuildContext context) 
   {
     return Container
@@ -55,40 +59,15 @@ class Footer extends StatelessWidget
                     'À propos de nous',
                     'F.A.Q',
                     'Nous contacter',
-                    'Gestion de mon abonnement',
+                    'Conditions générales',
                   ],
                   [
-                    'about.dart',
-                    'faq.dart',
-                    'contactUs.dart',
-                    'manageSubscription.dart',
-                  ]
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 40),
-          Expanded
-          (
-            flex: 2,
-            child: Column
-            (
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: 
-              [
-                _sectionTitle('LE SERVICE OH MY TAG !'),
-                _buildLinkList
-                (
-                  [
-                    'Comment ça marche ?',
-                    'Créer une nouvelle wishlist',
-                    'Rechercher une wishlist',
+                    AboutPage(),
+                    FAQPage(),
+                    ContactPage(),
+                    GeneralsConditionsPage(),
                   ],
-                  [
-                    'privacy.dart',
-                    'terms.dart',
-                    'support.dart',
-                  ]
+                  context,
                 ),
               ],
             ),
@@ -115,7 +94,7 @@ class Footer extends StatelessWidget
   }
 
 
-  // 🔹 Footer Mobile
+  // Footer Mobile
   Widget _buildMobileFooter(BuildContext context) 
   {
     return Container
@@ -140,36 +119,23 @@ class Footer extends StatelessWidget
           ),
           const SizedBox(height: 30),
           _sectionTitle('A PROPOS DE OH MY TAG !'),
-          _buildLinkList
-          (
-            [
-              'À propos de nous',
-              'F.A.Q',
-              'Nous contacter',
-              'Gestion de mon abonnement',
-            ],
-            [
-              'about.dart',
-              'faq.dart',
-              'contactUs.dart',
-              'manageSubscription.dart',
-            ]
-          ),
-          const SizedBox(height: 30),
-          _sectionTitle('LE SERVICE OH MY TAG !'),
-          _buildLinkList
-          (
-            [
-              'Comment ça marche ?',
-              'Créer une wishlist',
-              'Rechercher une wishlist',
-            ],
-            [
-              'privacy.dart',
-              'terms.dart',
-              'support.dart',
-            ]
-          ),
+          _buildLinkList(
+          [
+            'À propos de nous',
+            'F.A.Q',
+            'Nous contacter',
+            'Conditions générales',
+          ],
+          [
+            AboutPage(),
+            FAQPage(),
+            ContactPage(),
+            GeneralsConditionsPage(),
+          ],
+          context,
+        ),
+
+        const SizedBox(height: 30),
           const SizedBox(height: 30),
           _sectionTitle('SUIVEZ-NOUS SUR\nNOS RESEAUX SOCIAUX !'),
           _buildSocialLinks(context),
@@ -235,38 +201,33 @@ class Footer extends StatelessWidget
 }
 
 // Function to build a list of links
-  Widget _buildLinkList(List<String> titles, List<String> paths) 
-  {
-    return Column
-    (
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate
-      (
-        titles.length,
-        (index) => Padding
-        (
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GestureDetector
-          (
-            onTap: () 
-            {
-              // Ajoute ici la navigation vers les pages
-            },
-            child: Text
-            (
-              '• ${titles[index]}',
-              style: const TextStyle
-              (
-                fontSize: 18,
-                color: Colors.white,
-                fontFamily: 'CaviarDreams',
-              ),
+  Widget _buildLinkList(List<String> titles, List<Widget> destinations, BuildContext context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: List.generate(
+      titles.length,
+      (index) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => destinations[index]), // ✅ Navigation correcte
+            );
+          },
+          child: Text(
+            '• ${titles[index]}',
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.white,
+              fontFamily: 'CaviarDreams',
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Function to display a social icon that can be clicked
 Widget _buildSocialIcon(String assetPath, String url, BuildContext context) {
@@ -276,7 +237,7 @@ Widget _buildSocialIcon(String assetPath, String url, BuildContext context) {
   (
     onTap: () 
     {
-      // Ajouter ici la logique pour ouvrir l'URL
+      // TODO : Add the loginc to open the URL
     },
     child: Container
     (
@@ -298,7 +259,7 @@ Widget _buildSocialIcon(String assetPath, String url, BuildContext context) {
     (
       onTap: () 
       {
-        
+        // TODO : Add the loginc to open the URL
       },
       child: Image.asset
       (

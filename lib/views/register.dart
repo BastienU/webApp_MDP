@@ -185,8 +185,10 @@ class _RegisterPageState extends State<RegisterPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Text(label, style: const TextStyle(fontSize: 16)),
+        const SizedBox(width: 5),
         Radio<String>(
-          value: value,
+          value: label,
           groupValue: selectedGender,
           activeColor: const Color(0xFF592DF2),
           onChanged: (val) {
@@ -195,7 +197,6 @@ class _RegisterPageState extends State<RegisterPage> {
             });
           },
         ),
-        Text(label),
       ],
     );
   }

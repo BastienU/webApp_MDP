@@ -1,0 +1,24 @@
+workflows:
+  ios-app-store:
+    name: iOS App Store Deployment
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      groups:
+        - app_store_credentials
+    triggering:
+      events:
+        - push
+    scripts:
+      - name: Setup Flutter
+        script: |
+          flutter --version
+      - name: Install dependencies
+        script: |
+          flutter pub get
+      - name: Build iOS app
+        script: |
+          flutter build ios --release
+    publishing:
+      app_store:
+        export_method: "app-store"
