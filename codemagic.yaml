@@ -22,3 +22,4 @@ workflows:
     publishing:
       app_store:
         export_method: "app-store"
+        artifact_type: "ipa"
