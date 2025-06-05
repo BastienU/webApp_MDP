@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web_app/views/about.dart';
 import 'package:web_app/views/contact.dart';
 import 'package:web_app/views/faq.dart';
@@ -53,22 +54,24 @@ class Footer extends StatelessWidget
               children: 
               [
                 _sectionTitle('A PROPOS DE OH MY TAG !'),
-                _buildLinkList
-                (
-                  [
-                    'À propos de nous',
-                    'F.A.Q',
-                    'Nous contacter',
-                    'Conditions générales',
-                  ],
-                  [
-                    AboutPage(),
-                    FAQPage(),
-                    ContactPage(),
-                    GeneralsConditionsPage(),
-                  ],
-                  context,
-                ),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: _buildLinkList(
+                    [
+                      'À propos de nous',
+                      'F.A.Q',
+                      'Nous contacter',
+                      'Conditions générales',
+                    ],
+                    [
+                      AboutPage(),
+                      FAQPage(),
+                      ContactPage(),
+                      GeneralsConditionsPage(),
+                    ],
+                    context,
+                  ),
+                )
               ],
             ),
           ),
@@ -82,9 +85,13 @@ class Footer extends StatelessWidget
               children: 
               [
                 _sectionTitle('SUIVEZ-NOUS SUR NOS RESEAUX SOCIAUX !'),
-                _buildSocialLinks(context),
-                const SizedBox(height: 20),
-                _buildStoreButtons(),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: _openInstagram,
+                    child: Image.asset('images/logo_insta_white.png', width: 40, height: 40),
+                  ),
+                )
               ],
             ),
           ),
@@ -136,11 +143,11 @@ class Footer extends StatelessWidget
         ),
 
         const SizedBox(height: 30),
-          const SizedBox(height: 30),
           _sectionTitle('SUIVEZ-NOUS SUR\nNOS RESEAUX SOCIAUX !'),
-          _buildSocialLinks(context),
-          const SizedBox(height: 20),
-          _buildStoreButtons(),
+          GestureDetector(
+            onTap: _openInstagram,
+            child: Image.asset('images/logo_insta_white.png', width: 40, height: 40),
+          ),
         ],
       ),
     );
@@ -172,31 +179,13 @@ class Footer extends StatelessWidget
     );
   }
 
-  Widget _buildSocialLinks(BuildContext context) 
-  {
-    return Row
-    (
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: 
-      [
-        _buildSocialIcon('images/logo_insta_white.png', 'https://instagram.com', context),
-      ],
-    );
-  }
-
-
-  Widget _buildStoreButtons() 
-  {
-    return Row
-    (
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: 
-      [
-        _buildStoreButton('images/download_AppStore.png', 'https://www.apple.com/app-store/'),
-        const SizedBox(width: 10),
-        _buildStoreButton('images/download_GooglePlay.png', 'https://play.google.com/store/apps'),
-      ],
-    );
+  void _openInstagram() async {
+    final Uri url = Uri.parse('https://www.instagram.com/_ohmytag_?utm_source=ig_web_button_share_sheet&igsh=bGN3aDc0enFpcGsx');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Impossible d\'ouvrir l\'URL : $url';
+    }
   }
 }
 
@@ -212,7 +201,7 @@ class Footer extends StatelessWidget
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => destinations[index]), // ✅ Navigation correcte
+              MaterialPageRoute(builder: (_) => destinations[index]),
             );
           },
           child: Text(
@@ -228,45 +217,3 @@ class Footer extends StatelessWidget
     ),
   );
 }
-
-  // Function to display a social icon that can be clicked
-Widget _buildSocialIcon(String assetPath, String url, BuildContext context) {
-  final bool isMobile = MediaQuery.of(context).size.width < 800;
-
-  return GestureDetector
-  (
-    onTap: () 
-    {
-      // TODO : Add the loginc to open the URL
-    },
-    child: Container
-    (
-      margin: isMobile ? const EdgeInsets.only(left: 100) : EdgeInsets.zero,
-      child: Image.asset
-      (
-        assetPath,
-        width: 40,
-        height: 40,
-        fit: BoxFit.cover,
-      ),
-    ),
-  );
-}
-
-  Widget _buildStoreButton(String assetPath, String url) 
-  {
-    return GestureDetector
-    (
-      onTap: () 
-      {
-        // TODO : Add the loginc to open the URL
-      },
-      child: Image.asset
-      (
-        assetPath,
-        width: 150,
-        height: 50,
-        fit: BoxFit.cover,
-      ),
-    );
-  }

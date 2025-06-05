@@ -25,7 +25,10 @@ class MainScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            Image.asset('images/logo_ohmytag.png', width: 100),
+            InkWell(
+              onTap: () => _navigateTo(context, "/"),
+              child: Image.asset('images/logo_ohmytag.png', width: 100),
+            ),
             const SizedBox(width: 20),
             if (isDesktop)
               FutureBuilder<bool>(
@@ -78,7 +81,10 @@ class MainScaffold extends StatelessWidget {
                   final isLoggedIn = snapshot.data ?? false;
                   return ListView(
                     children: [
-                      Image.asset('images/logo_ohmytag.png', width: 200),
+                      InkWell(
+                        onTap: () => _navigateTo(context, "/"),
+                        child: Image.asset('images/logo_ohmytag.png', width: 100),
+                      ),
                       _drawerItem(context, 'Accueil', '/'),
                       if (isLoggedIn) _drawerItem(context, 'Scanner', '/scanner'),
                       if (isLoggedIn) _drawerItem(context, 'Wishlist', '/wishlist'),

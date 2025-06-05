@@ -15,12 +15,48 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   String? selectedGender;
+  bool termsAccepted = false;
+
   final TextEditingController nomController = TextEditingController();
   final TextEditingController prenomController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  String? nameError;
+  String? firstnameError;
+  String? emailError;
+  String? passwordError;
+  String? termsError;
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Erreur"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _registerUser() async {
+    setState(() {
+      nameError = nomController.text.isEmpty ? "Vous devez renseigner votre nom" : null;
+      firstnameError = prenomController.text.isEmpty ? "Vous devez renseigner votre prénom" : null;
+      emailError = emailController.text.isEmpty ? "Vous devez renseigner votre adresse e-mail" : null;
+      passwordError = passwordController.text.length < 8 ? "Le mot de passe doit contenir au moins 8 caractères" : null;
+      termsError = !termsAccepted ? "Vous devez accepter les termes et conditions" : null;
+    });
+
+    if (nameError != null || firstnameError != null || emailError != null || passwordError != null || termsError != null) {
+      return;
+    }
+
     final response = await http.post(
       Uri.parse('$apiBaseUrl/api/auth/signup'),
       headers: {'Content-Type': 'application/json'},
@@ -31,15 +67,34 @@ class _RegisterPageState extends State<RegisterPage> {
         'email': emailController.text,
         'password': passwordController.text,
         'role': 'user',
-        'termsAccepted': true,
+        'termsAccepted': termsAccepted,
       }),
     );
 
     if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inscription réussie !')));
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : ${jsonDecode(response.body)['error']}')));
+      final errorMessage = jsonDecode(response.body)['error'];
+
+      if (errorMessage.contains("nom")) {
+        setState(() {
+          nameError = errorMessage;
+        });
+      } else if (errorMessage.contains("prenom")) {
+        setState(() {
+          firstnameError = errorMessage;
+        });
+      } else if (errorMessage.contains("email")) {
+        setState(() {
+          emailError = errorMessage;
+        });
+      } else if (errorMessage.contains("password")) {
+        setState(() {
+          passwordError = errorMessage;
+        });
+      } else {
+        _showError(errorMessage);
+      }
     }
   }
 
@@ -122,15 +177,45 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(height: 25),
           Row(
             children: [
-              Expanded(child: _buildTextField(label: 'Nom', controller: nomController)),
+              Expanded(child: _buildTextField(label: 'Nom', controller: nomController, errorText: nameError)),
               const SizedBox(width: 10),
-              Expanded(child: _buildTextField(label: 'Prénom', controller: prenomController)),
+              Expanded(child: _buildTextField(label: 'Prénom', controller: prenomController, errorText: firstnameError)),
             ],
           ),
           const SizedBox(height: 15),
-          _buildTextField(label: 'Adresse e-mail', controller: emailController),
+          _buildTextField(label: 'Adresse e-mail', controller: emailController, errorText: emailError),
           const SizedBox(height: 15),
-          _buildTextField(label: 'Mot de passe (8 caractères minimum)', obscure: true, controller: passwordController),
+          _buildTextField(label: 'Mot de passe (8 caractères minimum)', obscure: true, controller: passwordController, errorText: passwordError),
+          const SizedBox(height: 15),
+          
+          Row(
+            children: [
+              Checkbox(
+                value: termsAccepted,
+                activeColor: const Color(0xFF592DF2),
+                onChanged: (value) {
+                  setState(() {
+                    termsAccepted = value!;
+                  });
+                },
+              ),
+              const Expanded(
+                child: Text(
+                  "J'accepte les termes et conditions",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          if (termsError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                termsError!,
+                style: TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+
           const SizedBox(height: 25),
           SizedBox(
             width: double.infinity,
@@ -153,35 +238,46 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          const SizedBox(height: 15),
-          Center(
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                );
-              },
-              child: RichText(
-                text: const TextSpan(
-                  text: 'Vous avez déjà un compte ? ',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                  children: [
-                    TextSpan(
-                      text: 'Se connecter à mon compte',
-                      style: TextStyle(color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildRadioOption(String label, String value) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    String? errorText,
+    bool obscure = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          obscureText: obscure,
+          decoration: InputDecoration(
+            labelText: label,
+            filled: true,
+            fillColor: const Color(0xFFF0F0F0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text(
+              errorText,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+   Widget _buildRadioOption(String label, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -198,26 +294,6 @@ class _RegisterPageState extends State<RegisterPage> {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    bool obscure = false,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: const Color(0xFFF0F0F0),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-      ),
     );
   }
 }

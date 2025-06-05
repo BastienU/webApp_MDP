@@ -54,6 +54,18 @@ class ApiService {
     }
   }
 
+  // Récupérer les wishlists de l'utilisateur connecté
+  Future<List<dynamic>> getUserWishlists(String token) async {
+    final url = Uri.parse('$apiBaseUrl/api/wishlist/user');
+    final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des wishlists');
+    }
+  }
+
 
   // Récupérer les produits d'une wishlist
   Future<http.Response> getAllProductsFromWishlist(String token, int wishlistId) {

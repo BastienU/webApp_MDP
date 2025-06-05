@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_app/views/wishlist_details.dart';
 import '../layout/main_scaffold.dart';
-import '../widgets/footer.dart';
 import '../api_service.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class WishlistPage extends StatefulWidget {
   const WishlistPage({super.key});
@@ -19,6 +17,9 @@ class _WishlistPageState extends State<WishlistPage> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   late Future<List<dynamic>> _wishlists;
 
+  String? createWishlistError;
+  String? renameWishlistError;
+
   @override
   void initState() {
     super.initState();
@@ -29,11 +30,20 @@ class _WishlistPageState extends State<WishlistPage> {
     return await storage.read(key: 'token');
   }
 
+  Future<int?> _getUserIdFromToken() async {
+  final String? token = await storage.read(key: 'token');
+
+  if (token == null) return null;
+
+  final Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+  return decodedToken['id'];
+}
+
   void _loadWishlists() async {
     final token = await _getToken();
     if (token != null) {
       setState(() {
-        _wishlists = _apiService.getAllWishlists(token);
+        _wishlists = _apiService.getUserWishlists(token);
       });
     } else {
       print('Token introuvable, utilisateur non connecté.');
@@ -41,14 +51,30 @@ class _WishlistPageState extends State<WishlistPage> {
   }
 
   void _createWishlist() async {
-    final TextEditingController nameController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+  final TextEditingController nameController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
         title: const Text("Créer une nouvelle wishlist"),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(labelText: "Nom de la wishlist"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Nom de la wishlist"),
+            ),
+            if (createWishlistError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  createWishlistError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
+          ],
         ),
         actions: [
           TextButton(
@@ -58,15 +84,59 @@ class _WishlistPageState extends State<WishlistPage> {
           ElevatedButton(
             onPressed: () async {
               final token = await _getToken();
-              if (token != null) {
-                await _apiService.createWishlist(token, nameController.text, 1);
+              final int? userId = await _getUserIdFromToken();
+
+              if (nameController.text.trim().isEmpty) {
+                setDialogState(() {
+                  createWishlistError = "Le nom de la wishlist est requis.";
+                });
+                return;
+              }
+
+              if (token != null && userId != null) {
+                await _apiService.createWishlist(token, nameController.text, userId);
                 _loadWishlists();
               } else {
-                print("Utilisateur non connecté, impossible de créer une wishlist.");
+                setDialogState(() {
+                  createWishlistError = "Utilisateur non connecté.";
+                });
               }
               Navigator.pop(context);
             },
             child: const Text("Créer"),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  void _showSuccess(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Succès"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Erreur"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
           ),
         ],
       ),
@@ -75,60 +145,53 @@ class _WishlistPageState extends State<WishlistPage> {
 
   void _renameWishlist(int wishlistId) async {
     final TextEditingController nameController = TextEditingController();
-    String? errorText;
 
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text("Renommer la wishlist"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: "Nouveau nom",
-                      errorText: errorText,
-                    ),
-                  ),
-                ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Renommer la wishlist"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Nouveau nom"),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Annuler"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty) {
-                      setState(() {
-                        errorText = "Veuillez saisir un nom !";
-                      });
-                      return;
-                    }
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Annuler"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.trim().isEmpty) {
+                  setDialogState(() {
+                    renameWishlistError = "Veuillez saisir un nom !";
+                  });
+                  return;
+                }
 
-                    final token = await _getToken();
-                    if (token != null) {
-                      final response = await _apiService.renameWishlist(token, wishlistId, nameController.text);
-                      if (response.statusCode == 200) { 
-                        _loadWishlists();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Wishlist renommée")));
-                        Navigator.pop(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Erreur lors du renommage")));
-                      }
-                    }
-                  },
-                  child: const Text("Renommer"),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                final token = await _getToken();
+                if (token != null) {
+                  final response = await _apiService.renameWishlist(token, wishlistId, nameController.text);
+                  if (response.statusCode == 200) {
+                    Navigator.pop(context);
+                    _loadWishlists();
+                    _showSuccess("Wishlist renommée avec succès !");
+                  } else {
+                    _showError("Erreur lors du renommage.");
+                  }
+                }
+              },
+              child: const Text("Renommer"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -137,15 +200,10 @@ class _WishlistPageState extends State<WishlistPage> {
     if (token != null) {
       final response = await _apiService.deleteWishlist(token, wishlistId);
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
         _loadWishlists();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['message'] ?? "Wishlist supprimée")),
-        );
+        _showSuccess("Wishlist supprimée avec succès !");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur lors de la suppression")),
-        );
+        _showError("Erreur lors de la suppression.");
       }
     }
   }
@@ -222,7 +280,6 @@ class _WishlistPageState extends State<WishlistPage> {
               },
             ),
           ),
-          // const Footer(),
         ],
       ),
     );

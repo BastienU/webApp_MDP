@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../layout/main_scaffold.dart';
-import '../widgets/footer.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});

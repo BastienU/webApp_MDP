@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../layout/main_scaffold.dart';
-import '../widgets/footer.dart';
 
 class GeneralsConditionsPage extends StatelessWidget {
   const GeneralsConditionsPage({super.key});

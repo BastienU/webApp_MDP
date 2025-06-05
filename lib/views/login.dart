@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/footer.dart';
-import '../views/register.dart';
 import '../config.dart';
 import '../views/home_page.dart';
 import '../views/dashboard.dart';
@@ -20,6 +19,9 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  String? emailError;
+  String? passwordError;
 
   @override
   void initState() {
@@ -42,30 +44,33 @@ class _LoginPageState extends State<LoginPage> {
     await storage.write(key: 'token', value: token);
   }
 
-  String? _validateEmail(String email) {
-    if (email.isEmpty) return "L'email est requis.";
-    if (!RegExp(r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
-      return "Format d'email invalide.";
-    }
-    return null;
-  }
-
-  String? _validatePassword(String password) {
-    if (password.isEmpty) return "Le mot de passe est requis.";
-    if (password.length < 8) return "Le mot de passe doit contenir au moins 8 caractères.";
-    return null;
-  }
   Future<bool> _isAuthenticated() async {
     final token = await _getToken();
     return token != null;
   }
 
   Future<void> _loginUser() async {
-    final emailError = _validateEmail(emailController.text);
-    final passwordError = _validatePassword(passwordController.text);
+    setState(() {
+      if (emailError == null)
+      {
+        emailError = emailController.text.isEmpty ? "L'email est requis." : null;
+      }
+      else if (!emailController.text.contains('@'))
+      {
+        emailError = !emailController.text.contains('@') ? "Le format de l'email est incorrect (exemple@exemple.com)." : null;
+      }
+
+      if (passwordError == null)
+      {
+        passwordError = passwordController.text.isEmpty ? "Le mot de passe est requis." : null;
+      }
+      else if (passwordController.text.length < 8)
+      {
+        passwordError = passwordController.text.length < 8 ? "Le mot de passe doit contenir au moins 8 caractères." : null;
+      }
+    });
 
     if (emailError != null || passwordError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(emailError ?? passwordError!)));
       return;
     }
 
@@ -88,18 +93,15 @@ class _LoginPageState extends State<LoginPage> {
       final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(token.split('.')[1]))));
       final String role = payload['role'];
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connexion réussie !')));
-
       if (role == 'retailer') {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage()));
       } else {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
       }
     } else {
-      final error = jsonDecode(response.body)['error'];
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.contains("incorrect") ? "Email ou mot de passe incorrect." : error)),
-      );
+      setState(() {
+        emailError = passwordError = "Email ou mot de passe incorrect.";
+      });
     }
   }
 
@@ -151,16 +153,16 @@ class _LoginPageState extends State<LoginPage> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'CaviarDreams'),
           ),
           const SizedBox(height: 20),
-          _buildTextField(label: 'Adresse e-mail', controller: emailController),
+          _buildTextField(label: 'Adresse e-mail', controller: emailController, errorText: emailError),
           const SizedBox(height: 20),
-          _buildTextField(label: 'Mot de passe', controller: passwordController, obscure: true),
+          _buildTextField(label: 'Mot de passe', controller: passwordController, obscure: true, errorText: passwordError),
           const SizedBox(height: 25),
           FutureBuilder<bool>(
             future: _isAuthenticated(),
             builder: (context, snapshot) {
               final isLoggedIn = snapshot.data ?? false;
               return isLoggedIn
-                  ? Container() // ✅ Masque le bouton si connecté
+                  ? Container()
                   : SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -181,49 +183,34 @@ class _LoginPageState extends State<LoginPage> {
                     );
             },
           ),
-          const SizedBox(height: 15),
-          Center(
-            child: FutureBuilder<bool>(
-              future: _isAuthenticated(),
-              builder: (context, snapshot) {
-                final isLoggedIn = snapshot.data ?? false;
-                return isLoggedIn
-                    ? Container()
-                    : TextButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
-                        },
-                        child: RichText(
-                          text: const TextSpan(
-                            text: 'Vous n\'avez pas encore de compte ? ',
-                            style: TextStyle(color: Colors.grey, fontSize: 13),
-                            children: [
-                              TextSpan(
-                                text: 'Inscrivez-vous !',
-                                style: TextStyle(color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-              },
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildTextField({required String label, required TextEditingController controller, bool obscure = false}) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: const Color(0xFFF0F0F0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-      ),
+  Widget _buildTextField({required String label, required TextEditingController controller, String? errorText, bool obscure = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          obscureText: obscure,
+          decoration: InputDecoration(
+            labelText: label,
+            filled: true,
+            fillColor: const Color(0xFFF0F0F0),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text(
+              errorText,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 }
