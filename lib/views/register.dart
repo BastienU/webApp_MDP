@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../layout/main_scaffold.dart';
@@ -236,6 +237,24 @@ class _RegisterPageState extends State<RegisterPage> {
                   color: Colors.white,
                 ),
               ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          RichText(
+            text: TextSpan(
+              children: [
+                const TextSpan(
+                  text: "Vous avez déjà un compte ? ",
+                  style: TextStyle(fontSize: 14, color: Colors.black),
+                ),
+                TextSpan(
+                  text: "Connectez-vous !",
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()..onTap = () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                  },
+                ),
+              ],
             ),
           ),
         ],
