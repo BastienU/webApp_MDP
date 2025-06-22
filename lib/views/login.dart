@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,6 +8,7 @@ import '../config.dart';
 import '../views/home_page.dart';
 import '../views/dashboard.dart';
 import '../layout/main_scaffold.dart';
+import 'register.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -182,6 +184,24 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     );
             },
+          ),
+          const SizedBox(height: 20),
+          RichText(
+            text: TextSpan(
+              children: [
+                const TextSpan(
+                  text: "Vous n'avez pas encore de compte ? ",
+                  style: TextStyle(fontSize: 14, color: Colors.black),
+                ),
+                TextSpan(
+                  text: "Inscrivez-vous !",
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF592DF2), fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()..onTap = () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
